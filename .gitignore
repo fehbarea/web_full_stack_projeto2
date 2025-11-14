@@ -1,0 +1,39 @@
+# ----------------------------------------------------------------------
+# Configuração Global (Aplica-se a todo o projeto)
+# ----------------------------------------------------------------------
+.DS_Store
+.env
+.idea/
+.vscode/
+npm-debug.log*
+
+# ----------------------------------------------------------------------
+# Arquivos Específicos do Backend (Exemplo: Node.js, Python, Java)
+# ----------------------------------------------------------------------
+# Ignore a pasta de dependências do Node.js (se o backend for Node.js)
+/backend/node_modules
+
+# Arquivos de log de teste ou compilação do backend
+/backend/logs/
+/backend/dist/
+/backend/target/
+
+# Arquivos de banco de dados locais (Exemplo: SQLite, se usado)
+/backend/*.sqlite
+/backend/*.db
+
+# ----------------------------------------------------------------------
+# Arquivos Específicos do Frontend (Exemplo: React, Vue, Angular)
+# ----------------------------------------------------------------------
+# Ignore a pasta de dependências do Node.js
+/frontend/node_modules
+
+# Pastas de saída/build da aplicação Frontend
+# Escolha a pasta correta dependendo do seu framework:
+/frontend/dist/    # Usado por Vue, alguns setups de Webpack/Vite
+/frontend/build/   # Usado por Create React App
+/frontend/out/     # Outras configurações
+
+# Arquivos de cache de framework/bibliotecas
+/frontend/.svelte-kit/
+/frontend/.angular/cache/
