@@ -1,0 +1,44 @@
+.Select{
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-direction: column;
+    font-family: "Montserrat";
+    padding: 0.5%;
+}
+
+.Select select{
+    width: 100%;
+    padding: 5px;
+    margin-block: 0.25%;
+    border: 2px solid #40404050;
+    border-radius: 10px;
+    background-color: #d9d9d9da;
+    font-size: 1rem;
+    color: #404040;
+    cursor: pointer;
+}
+
+.Select option{
+    font-family: "Montserrat";
+    font-size: 0.9rem;
+    color: #404040;
+}
+
+.Select label{
+    width: 100%;
+    font-weight: 600;
+    color: #404040;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: start;
+}
+
+.errorMessage{
+    color: red;
+    font-size: 0.8rem;
+    margin-block: 0.25%;
+    font-size: 1rem;
+}
+
