@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 
 const createAdminUser = async () => {
     const adminData = {
-        email: 'admin',
+        email: 'admin@admin.com',
         senha: 'admin',
     };
     const hashedPassword = await bcrypt.hash(adminData.senha, 10);

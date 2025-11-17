@@ -11,6 +11,7 @@ function FormEndereco() {
     const dispatch = useDispatch();
     const { register, handleSubmit, formState: { errors }, reset } = useForm();
     const { ceps, status, error } = useSelector(state => state.endereco);
+    const { token } = useSelector(state => state.auth);
 
     const estadosBrasileiros = [
   { label: 'Acre', value: 'AC' },
@@ -47,7 +48,8 @@ function FormEndereco() {
             await dispatch(consultarEndereco({
                 estado: data.estado,
                 cidade: data.cidade,
-                rua: data.rua
+                rua: data.rua,
+                token
             })).unwrap();
         } catch (err) {
             console.error('Falha ao consultar endereço:', err);

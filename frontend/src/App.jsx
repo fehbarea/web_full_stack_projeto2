@@ -7,6 +7,7 @@ import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute.jsx';
 
 const Login = React.lazy(() => import('./components/Login/Login.jsx'));
 const FormEndereco = React.lazy(() => import('./components/FormEndereco/FormEndereco.jsx'));
+const FormAdicionarCep = React.lazy(() => import('./components/FormAdicionarCep/FormAdicionarCep.jsx'));
 
 function App() {
   return (
@@ -24,6 +25,14 @@ function App() {
             <ProtectedRoute>
               <Suspense fallback={<div>Carregando Formulário...</div>}>
                 <FormEndereco />
+              </Suspense>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/adicionar-cep" element={
+            <ProtectedRoute>
+              <Suspense fallback={<div>Carregando Formulário...</div>}>
+                <FormAdicionarCep />
               </Suspense>
             </ProtectedRoute>
           } />

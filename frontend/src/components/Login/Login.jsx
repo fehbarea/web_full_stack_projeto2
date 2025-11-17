@@ -5,7 +5,7 @@ import style from "./Login.module.css";
 import Submit from "../Submit/";
 import Input from '../Input';
 import Header from '../Header/Header';
-import { realizaLogin } from '../../loginService';
+import { realizaLogin } from '../../services.js';
 
 function Login() {
     const { register, handleSubmit, formState: { errors } } = useForm();
@@ -13,8 +13,7 @@ function Login() {
     const dispatch = useDispatch();
 
     async function onSubmit(data) {
-        //await realizaLogin(data, dispatch, navigate);
-        console.log(data)
+        await realizaLogin(data, dispatch, navigate);
         navigate('/endereco');
     }
 

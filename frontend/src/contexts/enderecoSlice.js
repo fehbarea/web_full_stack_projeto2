@@ -1,11 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import buscaCep from '../cepService';
+import { buscaCep } from '../services';
 
 export const consultarEndereco = createAsyncThunk(
     'endereco/consultarEndereco',
-    async ({ estado, cidade, rua }) => {
+    async ({ estado, cidade, rua }, { getState }) => {
         try {
-            const ceps = await buscaCep(estado, cidade, rua);
+            const state = getState();
+            const token = state.auth.token;
+            const ceps = await buscaCep(estado, cidade, rua,token);
             return {
                 dados: { estado, cidade, rua },
                 ceps
