@@ -6,12 +6,14 @@ import Input from '../Input';
 import Select from "../Select";
 import Header from "../Header/Header.jsx";
 import { consultarEndereco } from '../../contexts/enderecoSlice';
+import { useNavigate } from 'react-router-dom';
 
 function FormEndereco() {
     const dispatch = useDispatch();
     const { register, handleSubmit, formState: { errors }, reset } = useForm();
     const { ceps, status, error } = useSelector(state => state.endereco);
     const { token } = useSelector(state => state.auth);
+    const navigate = useNavigate()
 
     const estadosBrasileiros = [
   { label: 'Acre', value: 'AC' },
@@ -84,11 +86,12 @@ function FormEndereco() {
                 validationRules={{ required: 'Campo Obrigatório', minLength: { value: 3, message: 'Bairro deve ter pelo menos 3 caracteres' } }}
                 register={register}
             />
-            <Submit
-                label={status === 'loading' ? 'Buscando...' : 'Buscar Cep'}
-                type="submit"
-                disabled={status === 'loading'}
-            />
+                <Submit
+                    label={status === 'loading' ? 'Buscando...' : 'Buscar Cep'}
+                    type="submit"
+                    disabled={status === 'loading'}
+                />
+
         </form>
 
         {/* Exibição dos resultados */}

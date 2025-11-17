@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import express from 'express';
-
+import cors from 'cors';
 
 //ROTAS
 import loginRoute from './src/routes/loginRoute.js';
@@ -15,7 +15,7 @@ app.use(express.json())
 //Middlewares
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
-
+app.use(cors());
 
 //ROTAS
 app.use('/login', loginRoute);

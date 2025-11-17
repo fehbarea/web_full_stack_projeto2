@@ -4,35 +4,52 @@ import { body, param, validationResult } from 'express-validator';
 import axios from 'axios';
 import Cep from '../models/cepModel.js';
 import Log from '../models/logModel.js';
-
+import redisClient from '../config/redisClient.js';
 const router = express.Router();
 
+// Rota para buscar o CEP
 router.get('/cep/:estado/:cidade/:logradouro/json', authMiddleware,
     [
         param('estado')
             .isLength({ min: 2, max: 2 })
-            .withMessage('O estado deve ter exatamente 2 caracteres'),
+            .withMessage('O estado deve ter exatamente 2 caracteres')
+            .trim()
+            .escape(),
 
         param('cidade')
             .isLength({ min: 3 })
-            .withMessage('O nome da cidade deve ter pelo menos 3 caracteres'),
+            .withMessage('O nome da cidade deve ter pelo menos 3 caracteres')
+            .trim()
+            .escape(),
 
         param('logradouro')
             .isLength({ min: 3 })
             .withMessage('O logradouro deve ter pelo menos 3 caracteres')
-            .customSanitizer(value => value.replace(/\+/g, ' ')) // opcional: converte + em espaço
+            .trim()
+            .escape()
+            .customSanitizer(value => value.replace(/\+/g, ' ')) // Substitui "+" por espaços
     ],
     verificarErros,
-    (req, res) => {
+    async (req, res) => {
         try {
             salvarLog('Busca de CEP', `Busca de CEP para ${req.params.logradouro}, ${req.params.cidade}-${req.params.estado}`, req.ip, `Parâmetros: ${JSON.stringify(req.params)}`);
             const { estado, cidade, logradouro } = req.params;
+
+            const cacheKey = `cep:${estado}:${cidade}:${logradouro}`;
+            const cachedData = await redisClient.get(cacheKey);
+
+            if (cachedData) {
+                console.log('Cache hit');
+                return res.json(JSON.parse(cachedData));
+            }
+
             const url = `https://viacep.com.br/ws/${estado}/${cidade}/${logradouro}/json/`;
             axios.get(url)
-                .then(response => {
+                .then(async response => {
                     if (response.data.erro) {
                         return res.status(404).json({ message: 'CEP não encontrado' });
                     }
+                    await redisClient.setEx(cacheKey, 3600, JSON.stringify(response.data));
                     res.json(response.data);
                 })
                 .catch(error => {
@@ -46,15 +63,34 @@ router.get('/cep/:estado/:cidade/:logradouro/json', authMiddleware,
     }
 );
 
-
+// Rota para adicionar um novo CEP
 router.post('/cep', authMiddleware,
     [
         body('cep')
-            .matches(/^\d{5}\d{3}$/)
-            .withMessage('CEP inválido. Formato esperado: 12345678'),
+            .matches(/^\d{5}-?\d{3}$/)
+            .withMessage('CEP inválido. Formato esperado: 12345-678 ou 12345678')
+            .customSanitizer(value => value.replace(/[^0-9]/g, '')), // Remove qualquer caractere não numérico
+
+        body('logradouro')
+            .trim()
+            .escape(),
+
+        body('bairro')
+            .trim()
+            .escape(),
+
+        body('cidade')
+            .trim()
+            .escape(),
+
+        body('uf')
+            .optional()
+            .isLength({ min: 2, max: 2 })
+            .withMessage('UF inválido. Deve ter 2 caracteres')
+            .trim()
+            .escape()
     ],
     verificarErros,
-
     async (req, res) => {
         const { cep, logradouro, bairro, cidade, uf } = req.body;
         try {
@@ -64,20 +100,18 @@ router.post('/cep', authMiddleware,
                 return res.status(409).json({ message: 'CEP já existe na base de dados' });
             }
             const novoCep = new Cep({ cep, logradouro, bairro, cidade, uf });
-            novoCep.save();
+            await novoCep.save();
             res.status(201).json({ cep, logradouro, bairro, cidade, uf });
         } catch (err) {
             console.error('Erro ao adicionar CEP:', err);
             return res.status(500).json({ message: 'Erro no servidor' });
         }
-
-
     }
 );
 
+// Funções Auxiliares
 
-//Funções Auxiliares------
-
+// Função para verificar erros das validações
 function verificarErros(req, res, next) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -86,11 +120,12 @@ function verificarErros(req, res, next) {
     next();
 }
 
+// Middleware de autenticação
 function authMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ message: 'Token de autenticação ausente ou inválido' });
         salvarLog('Erro de Autenticação', 'Token ausente ou inválido', req.ip, 'Tentativa de acesso sem token');
+        return res.status(401).json({ message: 'Token de autenticação ausente ou inválido' });
     }
     const token = authHeader.split(' ')[1];
     try {
@@ -98,19 +133,17 @@ function authMiddleware(req, res, next) {
         req.user = decoded;
         next();
     } catch (err) {
-        return res.status(401).json({ message: 'Token de autenticação inválido' });
         salvarLog('Erro de Autenticação', 'Token inválido', req.ip, 'Tentativa de acesso com token inválido');
+        return res.status(401).json({ message: 'Token de autenticação inválido' });
     }
-};
+}
 
+// Função para salvar logs de atividades
 function salvarLog(tipo, mensagem, ip, detalhes) {
     const logEntry = new Log({ tipo, mensagem, ip, detalhes });
     logEntry.save().catch(err => {
         console.error('Erro ao salvar log:', err);
     });
 }
-
-
-//------------------------
 
 export default router;

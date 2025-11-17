@@ -4,7 +4,7 @@ import { login } from './contexts/authSlice';
 export async function adicionarCep(cepData, token) {
 
     try {
-        const response = await axios.post('http://localhost:5000/cep', cepData, {
+        const response = await axios.post('http://localhost:5000/api/cep', cepData, {
             headers: {
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -49,7 +49,7 @@ export async function realizaLogin(data, dispatch, navigate) {
 
 export async function buscaCep(estado, cidade, rua, token){
     try {
-        const url = `http://localhost:5000/cep/${estado}/${cidade}/${rua}/json/`;
+        const url = `http://localhost:5000/api/cep/${estado}/${cidade}/${rua}/json/`;
         const response = await axios.get(url,{
             headers: {
                 Authorization: `Bearer ${token}`
