@@ -101,10 +101,12 @@ function FormEndereco() {
             <div className={style.results}>
                 <h3>{ceps.length} CEPs Encontrados:</h3>
                 {ceps.length === 0 ? (
+                    
                     <p>Nenhum CEP encontrado para o endereço informado.</p>
                 ) : (
                     <ul>
-                        {ceps.map((cep, index) => (
+                        {
+                        ceps.map((cep, index) => (
                             <li key={index}>
                                 <p>CEP: {cep.cep}</p>
                                 <p>Logradouro: {cep.logradouro}</p>

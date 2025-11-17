@@ -64,8 +64,8 @@ export async function buscaCep(estado, cidade, rua, token){
             cep: dados.cep,
             logradouro: dados.logradouro,
             bairro: dados.bairro,
-            localidade: dados.localidade,
-            estado: dados.estado,
+            localidade: dados.cidade,
+            estado: dados.uf,
         }));
 
     } catch (error) {

@@ -1,7 +1,6 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import { body, param, validationResult } from 'express-validator';
-import axios from 'axios';
 import Cep from '../models/cepModel.js';
 import Log from '../models/logModel.js';
 import redisClient from '../config/redisClient.js';
@@ -43,19 +42,19 @@ router.get('/cep/:estado/:cidade/:logradouro/json', authMiddleware,
                 return res.json(JSON.parse(cachedData));
             }
 
-            const url = `https://viacep.com.br/ws/${estado}/${cidade}/${logradouro}/json/`;
-            axios.get(url)
-                .then(async response => {
-                    if (response.data.erro) {
-                        return res.status(404).json({ message: 'CEP não encontrado' });
-                    }
-                    await redisClient.setEx(cacheKey, 3600, JSON.stringify(response.data));
-                    res.json(response.data);
-                })
-                .catch(error => {
-                    console.error('Erro ao buscar CEP:', error);
-                    res.status(500).json({ message: 'Erro ao buscar CEP' });
-                });
+            const resultados = await Cep.find({
+                uf: estado.toUpperCase(),
+                cidade: new RegExp(`^${cidade}`, 'i'),
+                logradouro: new RegExp(logradouro, 'i')
+            }).lean();
+
+            if (!resultados || resultados.length === 0) {
+                return res.status(404).json({ message: 'Nenhum CEP encontrado no banco de dados' });
+            }
+
+            // Salva no cache
+            await redisClient.setEx(cacheKey, 3600, JSON.stringify(resultados));
+            return res.json(resultados);
         } catch (err) {
             console.error('Erro ao processar a requisição:', err);
             return res.status(500).json({ message: 'Erro no servidor' });
@@ -92,7 +91,14 @@ router.post('/cep', authMiddleware,
     ],
     verificarErros,
     async (req, res) => {
-        const { cep, logradouro, bairro, cidade, uf } = req.body;
+        let { cep, logradouro, bairro, cidade, uf } = req.body;
+        cep = cep ? cep.trim() : '';
+        logradouro = logradouro ? logradouro.trim() : '';
+        bairro = bairro ? bairro.trim() : '';
+        cidade = cidade ? cidade.trim() : '';
+        uf = uf ? uf.toUpperCase().trim() : '';
+
+        console.log("Bairro: " + bairro);
         try {
             salvarLog('Adição de CEP', `Tentativa de adicionar CEP ${cep}`, req.ip, `Dados: ${JSON.stringify(req.body)}`);
             const existente = await Cep.findOne({ cep });
