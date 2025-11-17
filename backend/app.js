@@ -1,8 +1,11 @@
 import dotenv from 'dotenv';
 import express from 'express';
+
+
 //ROTAS
-import loginRoutes from './routes/loginRoute.js';
-import voluntarioRoutes from './routes/voluntarioRoute.js'
+import loginRoute from './src/routes/loginRoute.js';
+import cepRoute from './src/routes/cepRoute.js';
+
 
 dotenv.config();
 const app = express();
@@ -15,6 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 
 
 //ROTAS
-app.use('/login', loginRoutes);
+app.use('/login', loginRoute);
+app.use('/api', cepRoute);
 
 export default app;

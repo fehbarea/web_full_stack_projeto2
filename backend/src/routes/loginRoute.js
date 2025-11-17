@@ -1,23 +1,7 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-import Usuario from '../models/voluntarioModel.js';
-
-async function authMiddleware (req, res, next){
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ message: 'Token de autenticação ausente ou inválido' });
-    }
-    const token = authHeader.split(' ')[1];
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        console.log(decoded);
-        req.user = decoded;
-        next();
-    } catch (err) {
-        return res.status(401).json({ message: 'Token de autenticação inválido' });
-    }
-};
+import Usuario from '../models/usuarioModel.js';
 
 async function gerarToken(req, res) {
     const { email, senha } = req.body;
