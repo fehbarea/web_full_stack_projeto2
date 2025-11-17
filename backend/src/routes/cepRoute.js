@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { body, param, validationResult } from 'express-validator';
 import axios from 'axios';
 import Cep from '../models/cepModel.js';
+import Log from '../models/logModel.js';
 
 const router = express.Router();
 
@@ -23,20 +24,25 @@ router.get('/cep/:estado/:cidade/:logradouro/json', authMiddleware,
     ],
     verificarErros,
     (req, res) => {
-
-        const { estado, cidade, logradouro } = req.params;
-        const url = `https://viacep.com.br/ws/${estado}/${cidade}/${logradouro}/json/`;
-        axios.get(url)
-            .then(response => {
-                if (response.data.erro) {
-                    return res.status(404).json({ message: 'CEP não encontrado' });
-                }
-                res.json(response.data);
-            })
-            .catch(error => {
-                console.error('Erro ao buscar CEP:', error);
-                res.status(500).json({ message: 'Erro ao buscar CEP' });
-            });
+        try {
+            salvarLog('Busca de CEP', `Busca de CEP para ${req.params.logradouro}, ${req.params.cidade}-${req.params.estado}`, req.ip, `Parâmetros: ${JSON.stringify(req.params)}`);
+            const { estado, cidade, logradouro } = req.params;
+            const url = `https://viacep.com.br/ws/${estado}/${cidade}/${logradouro}/json/`;
+            axios.get(url)
+                .then(response => {
+                    if (response.data.erro) {
+                        return res.status(404).json({ message: 'CEP não encontrado' });
+                    }
+                    res.json(response.data);
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar CEP:', error);
+                    res.status(500).json({ message: 'Erro ao buscar CEP' });
+                });
+        } catch (err) {
+            console.error('Erro ao processar a requisição:', err);
+            return res.status(500).json({ message: 'Erro no servidor' });
+        }
     }
 );
 
@@ -52,6 +58,7 @@ router.post('/cep', authMiddleware,
     async (req, res) => {
         const { cep, logradouro, bairro, cidade, uf } = req.body;
         try {
+            salvarLog('Adição de CEP', `Tentativa de adicionar CEP ${cep}`, req.ip, `Dados: ${JSON.stringify(req.body)}`);
             const existente = await Cep.findOne({ cep });
             if (existente) {
                 return res.status(409).json({ message: 'CEP já existe na base de dados' });
@@ -83,6 +90,7 @@ function authMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(401).json({ message: 'Token de autenticação ausente ou inválido' });
+        salvarLog('Erro de Autenticação', 'Token ausente ou inválido', req.ip, 'Tentativa de acesso sem token');
     }
     const token = authHeader.split(' ')[1];
     try {
@@ -91,8 +99,16 @@ function authMiddleware(req, res, next) {
         next();
     } catch (err) {
         return res.status(401).json({ message: 'Token de autenticação inválido' });
+        salvarLog('Erro de Autenticação', 'Token inválido', req.ip, 'Tentativa de acesso com token inválido');
     }
 };
+
+function salvarLog(tipo, mensagem, ip, detalhes) {
+    const logEntry = new Log({ tipo, mensagem, ip, detalhes });
+    logEntry.save().catch(err => {
+        console.error('Erro ao salvar log:', err);
+    });
+}
 
 
 //------------------------

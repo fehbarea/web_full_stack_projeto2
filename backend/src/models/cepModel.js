@@ -13,6 +13,6 @@ const cepSchema = new mongoose.Schema({
 	uf: { type: String, default: '' },
 }, { timestamps: true });
 
-const Cep = mongoose.model('Cep', cepSchema, 'cep');
+const Cep = mongoose.model('Cep', cepSchema, 'ceps');
 
 export default Cep;
